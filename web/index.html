@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Joyería Karina</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 400px; margin: auto; }
+    form { display: flex; flex-direction: column; }
+    label { margin-bottom: 0.5rem; }
+    input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+    button { padding: 0.5rem 1rem; margin-top: 1rem; }
+    #message { margin-top: 1rem; color: red; }
+  </style>
+</head>
+<body>
+  <h1>Login</h1>
+
+  <form id="login-form">
+    <label>
+      Usuario:
+      <input type="text" id="login-username" required />
+    </label>
+    <label>
+      Contraseña:
+      <input type="password" id="login-password" required />
+    </label>
+    <button type="submit">Ingresar</button>
+  </form>
+
+  <div id="message"></div>
+
+  <script>
+    const loginForm = document.getElementById('login-form');
+    const messageDiv = document.getElementById('message');
+
+    // Función para mostrar mensajes
+    function showMessage(msg, isError = true) {
+      messageDiv.style.color = isError ? 'red' : 'green';
+      messageDiv.textContent = msg;
+    }
+
+    // Decodificar JWT para extraer el payload
+    function parseJwt(token) {
+      try {
+        const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join(''));
+        return JSON.parse(jsonPayload);
+      } catch {
+        return null;
+      }
+    }
+
+    // Login
+    loginForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      messageDiv.textContent = '';
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        const res = await fetch('http://localhost:4000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al autenticar');
+
+        // Guardamos el token
+        localStorage.setItem('token', data.token);
+        showMessage('¡Login exitoso! Redirigiendo...', false);
+
+        // Decodificamos para ver el rol y redirigimos
+        const payload = parseJwt(data.token);
+        if (payload && payload.role === 'admin') {
+          window.location.href = '/admin.html';
+        } else {
+          window.location.href = '/employee.html';
+        }
+      } catch (err) {
+        showMessage('Error: ' + err.message);
+      }
+    });
+
+    /*
+      El JWT se guarda en localStorage para reutilizarlo en llamadas posteriores:
+      fetch('/api/clients', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+      })
+    */
+  </script>
+</body>
+</html>
