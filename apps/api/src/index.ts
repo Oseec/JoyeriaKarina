@@ -6,13 +6,14 @@ import { expressjwt as jwt } from 'express-jwt';
 import { connectDB } from './db';
 import authRoutes from './routes/auth.routes';
 import clientsRoutes from './routes/clients.routes';
+import sobremRoutes from './routes/sobres.routes';
 // …otras rutas
 
 const app = express();
 app.use(cors()); 
 app.use(express.json());
 app.use(
-  express.static(path.resolve(__dirname, '../..', 'web'))
+  express.static(path.resolve(__dirname, '../../../web'))
 );
 
 // Siempre conectar DB
@@ -38,6 +39,7 @@ app.use(
 // Rutas protegidas
 app.use('/api/clients', clientsRoutes);
 // …otras rutas CRUD
+app.use('/api/sobres', sobremRoutes);
 
 // Error handler
 app.use((err: any, _req: any, res: any, _next: any) => {
