@@ -14,9 +14,9 @@ const router = Router();
 router.get('/', getAllSobres);
 router.get('/listo', getSobresConcluidos);
 router.get('/estado/:idEstado', getSobresByEstado);
-router.get('/:id/mensaje',     generateMensajeRecogerSobre);    
+router.get('/:id/mensaje', generateMensajeRecogerSobre);    
 router.get('/:id', getSobreById);
-router.post('/', createSobre);
+router.post('/create', createSobre);
 router.put('/:id', updateSobre);
 
 

@@ -4,12 +4,27 @@ import * as sql from 'mssql';
 
 export const getAllSobres: RequestHandler = async (_req, res, next) => {
   try {
-    const result = await pool.request().execute('sp_get_sobres');
+    const result = await pool
+      .request()
+      .query(`
+        SELECT
+          s.id,
+          c.NombreCliente,
+          FORMAT(s.FechaIngreso, 'yyyy-MM-dd')   AS FechaIngreso,
+          FORMAT(s.FechaEntrega, 'yyyy-MM-dd')   AS FechaEntrega,
+          e.NombreEstado                         AS Estado,
+          s.PrecioTotal
+        FROM dbo.Sobre AS s
+        LEFT JOIN dbo.Cliente AS c
+          ON s.idCliente = c.id
+        LEFT JOIN dbo.Estado  AS e
+          ON s.idEstado  = e.id
+        ORDER BY s.id;
+      `);
     res.json(result.recordset);
-    return; // <-- Promise<void>
   } catch (err) {
     console.error(err);
-    next(err);  // delegamos al manejo de errores global
+    res.status(500).json({ error: 'Error al obtener sobres' });
   }
 };
 
@@ -69,13 +84,13 @@ export const createSobre: RequestHandler = async (req, res, next) => {
       .input('idCliente', sql.Int, idCliente)
       .input('Abono', sql.Money, Abono)
       .input('SaldoPendiente', sql.Money, SaldoPendiente)
-      .input('Tipo', sql.VarChar(50), Tipo)
+      .input('Tipo', sql.VarChar(50), Tipo ?? null)
       .input('FechaLimiteApartado', sql.Date, FechaLimiteApartado)
       .input('idTipoLetra', sql.Int, idTipoLetra)
       .input('DescripcionDeGrabados', sql.VarChar(2000), DescripcionDeGrabados)
       .input('FechaLimiteEntrega', sql.Date, FechaLimiteEntrega)
       .input('EnEspera', sql.Bit, EnEspera)
-      .input('createdBy', sql.Int, createdBy)
+      .input('createdBy', sql.Int, 1)
       .execute('sp_create_sobre');
 
     const newId = result.recordset[0].NewSobreId;
@@ -136,7 +151,7 @@ export const updateSobre: RequestHandler = async (req, res, next) => {
       .input('EnEspera',              sql.Bit,   EnEspera            ?? null)
       .input('updatedBy',             sql.Int,   updatedBy)
       .execute('sp_update_sobre');
-
+    
     res.json({ id, ...req.body, updatedBy });
     return;
   } catch (err: any) {

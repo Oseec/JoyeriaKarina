@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Joyería Karina</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f4f4; }
+    header { background: #333; color: white; padding: 1rem; display: flex; align-items: center; }
+    header h1 { flex: 1; margin: 0; }
+    nav button { margin-left: 0.5rem; padding: 0.5rem 1rem; border: none; background: #555; color: white; cursor: pointer; }
+    nav button.active { background: #08c; }
+    main { padding: 1rem; }
+    .module { display: none; }
+    .module.active { display: block; }
+    table { width:100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.5rem; border: 1px solid #ccc; text-align:left; }
+    form { margin-top:1rem; background:white; padding:1rem; border:1px solid #ccc; }
+    form label { display:block; margin-bottom:0.5rem; }
+    form input, form select, form textarea { width:100%; padding:0.5rem; margin-top:0.25rem; }
+    form button { margin-top:1rem; padding:0.5rem 1rem; }
+    .subform { border:1px dashed #888; padding:0.5rem; margin-top:1rem; display:none; }
+    .subform.active { display:block; }
+  </style>
+
+    <style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background: #222;
+        color: #fff;
+        padding: 1.5rem;
+        border-radius: 4px;
+        width: 320px;
+    }
+    .modal-content label {
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        width: 100%; margin-top: 0.25rem; padding: 0.5rem;
+        background: #333; border: 1px solid #444; color: #fff;
+    }
+    .modal-content button {
+        margin-left: 0.5rem;
+        padding: 0.4rem 0.8rem;
+    }
+    </style>
+
+    <style>
+    /* Estilos del switch */
+    .switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    margin: 0.5rem 0;
+    }
+    .switch input {
+    display: none;
+    }
+    .switch .slider {
+    width: 40px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    transition: background .2s;
+    margin-right: 0.5rem;
+    }
+    .switch .slider::before {
+    content: "";
+    position: absolute;
+    left: 2px; top: 2px;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform .2s;
+    }
+    .switch input:checked + .slider {
+    background: #08c;
+    }
+    .switch input:checked + .slider::before {
+    transform: translateX(20px);
+    }
+    .switch .label-text {
+    font-size: 0.9rem;
+    }
+    </style>
+
+</head>
+<body>
+  <header>
+    <h1>Joyería Karina - Panel Taller</h1>
+    <nav>
+      <button id="btn-sobres" class="active">Sobres</button>
+      <button id="btn-empleados">Empleados</button>
+      <button id="btn-clientes">Clientes</button>
+      <button id="btn-articulos">Artículos</button>
+      <button id="btn-reportes">Reportes</button>
+      <button id="btn-logout">Cerrar Sesión</button>
+    </nav>
+  </header>
+  <main>
+    <!-- Módulo Sobres -->
+    <section id="module-sobres" class="module active">
+      <h2>Gestión de Sobres</h2>
+      <button id="newSobreBtn">+ Nuevo Sobre</button>
+      <table>
+        <thead>
+            <tr>
+            <th>Cliente</th>
+            <th>Ingreso</th>
+            <th>Entrega</th>
+            <th>Estado</th>
+            <th>Total</th>
+            <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="sobresBody"></tbody>
+      </table>
+
+      <!-- FORMULARIO PRINCIPAL SOBRE -->
+      <form id="sobreForm" style="display:none;">
+        <h3 id="formTitle">Nuevo Sobre</h3>
+        <input type="hidden" id="sobreId">
+        <input type="hidden" id="inputCreatedBy" name="createdBy" />
+
+        <!-- Campos que exige el SP -->
+        <label>
+          Ubicación:
+          <select id="inputUbicacion" required></select>
+        </label>
+        <label>
+            Artículo:
+            <input type="text" id="inputArticuloName" placeholder="Crea un artículo..." readonly required />
+            <input type="hidden" id="inputArticuloId" required />
+            <button type="button" id="addArticuloBtn">+ Artículo</button>
+        </label>
+        <label>
+            Tipo Reparación:
+            <input type="hidden" id="inputTipoReparacionId" required />
+            <input type="text" id="inputTipoReparacionName" placeholder="Crear un tipo..." readonly required />
+            <button type="button" id="addTipoRepBtn">+ Tipo Rep.</button>
+        </label>
+        <label>
+          Estado:
+          <select id="inputEstado" required></select>
+        </label>
+        <label>
+          Precio Total:
+          <input type="number" step="0.01" id="inputPrecioTotal" required>
+        </label>
+        <label>
+          Fecha Ingreso:
+          <input type="date" id="inputFechaIngreso" required>
+        </label>
+        <label>
+          Fecha Entrega:
+          <input type="date" id="inputFechaEntrega">
+        </label>
+        <label>
+            Cliente:
+            <select id="inputCliente" required>
+                <option value="">-- Seleccione una opcion --</option>
+            </select>
+            <button type="button" id="addClienteBtn">+ Cliente</button>
+        </label>
+
+        <label>
+          Abono:
+          <input type="number" step="0.01" id="inputAbono">
+        </label>
+        <label>
+          Saldo Pendiente:
+          <input type="number" step="0.01" id="inputSaldoPendiente">
+        </label>
+        <label>
+          Fecha Límite Apartado:
+          <input type="date" id="inputFechaLimiteApartado">
+        </label>
+        <label>
+            Tipo Letra:
+            <input type="hidden" id="inputTipoLetraId" required />
+            <input type="text" id="inputTipoLetraName" placeholder="Crear un tipo..." readonly required />
+            <button type="button" id="addTipoLetraBtn">+ Tipo Letra</button>
+        </label>
+        <label>
+          Descripción de Articulo/Grabado:
+          <textarea id="inputDescripcionGrabados"></textarea>
+        </label>
+        <label>
+          Fecha Límite Entrega:
+          <input type="date" id="inputFechaLimiteEntrega">
+        </label>
+        <label class="switch">
+            <input type="checkbox" id="inputEnEspera">
+            <span class="slider"></span>
+            <span class="label-text">En Espera</span>
+        </label>
+        <label>
+          <input type="hidden" id="inputCreatedBy">
+        </label>
+
+        <button type="submit" id="saveSobreBtn">Guardar Sobre</button>
+        <button type="button" id="cancelSobreBtn">Cancelar</button>
+
+        <!-- SUBFORMULARIO CLIENTE EN LÍNEA -->
+        <div id="clienteSubform" class="subform">
+          <h4>Nuevo Cliente</h4>
+          <label>
+            Nombre:
+            <input type="text" id="newClienteNombre" name="newClienteNombre">
+          </label>
+          <label>
+            Cédula:
+            <input type="text" id="newClienteCedula" name="newClienteCedula">
+          </label>
+          <label>
+            Teléfono:
+            <input type="number" id="newClienteTelefono" name="newClienteTelefono">
+          </label>
+          <button type="button" id="saveClienteBtn">Crear Cliente</button>
+          <button type="button" id="cancelClienteBtn">Cancelar</button>
+        </div>
+
+        <!-- SUBFORMULARIO ARTÍCULO EN LÍNEA -->
+        <div id="articuloSubform" class="subform">
+          <h4>Nuevo Artículo</h4>
+          <label>
+            Tipo Artículo:
+            <input type="number" id="newArticuloTipo" name="newArticuloTipo">
+          </label>
+          <label>
+            Material:
+            <input type="number" id="newArticuloMaterial" name="newArticuloMaterial">
+          </label>
+          <label>
+            Peso:
+            <input type="number" step="0.01" id="newArticuloPeso" name="newArticuloPeso">
+          </label>
+          <label>
+            Cantidad:
+            <input type="number" id="newArticuloCantidad" name="newArticuloCantidad">
+          </label>
+          <label>
+            Descripción:
+            <textarea id="newArticuloDesc" name="newArticuloDesc"></textarea>
+          </label>
+          <button type="button" id="saveArticuloBtn">Crear Artículo</button>
+          <button type="button" id="cancelArticuloBtn">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Resto de secciones sin cambios -->
+    <section id="module-empleados" class="module">
+      <h2>Gestión de Empleados</h2>
+      <p>No puedes acceder a esta informacion...</p>
+
+    </section>
+    <section id="module-clientes" class="module">
+      <h2>Gestión de Clientes</h2>
+      <p>Aquí podrás crear, editar y listar clientes.</p>
+    <p>Seccion en desarrollo...</p>
+    </section>
+    <section id="module-articulos" class="module">
+      <h2>Gestión de Artículos</h2>
+      <p>Aquí podrás crear, editar y listar artículos.</p>
+      <p>Seccion en desarrollo...</p>
+    </section>
+    <section id="module-reportes" class="module">
+      <h2>Reportes</h2>
+      <p>Aquí podrás ver reportes de actividad.</p>
+      <p>Seccion en desarrollo...</p>
+    </section>
+  </main>
+
+    <!-- Modal de Crear Artículo -->
+    <div id="articuloModal" class="modal">
+    <div class="modal-content">
+        <h4>Nuevo Artículo</h4>
+        <label>
+        Tipo Artículo:
+        <select id="modalTipoArticulo"></select>
+        </label>
+        <label>
+        Material:
+        <select id="modalMaterial"></select>
+        </label>
+        <label>
+        Peso:
+        <input type="number" step="0.01" id="modalPeso" required />
+        </label>
+        <label>
+        Cantidad:
+        <input type="number" id="modalCantidad" required />
+        </label>
+        <label>
+        Descripción:
+        <textarea id="modalDescripcion"></textarea>
+        </label>
+        <div style="text-align:right; margin-top:1rem;">
+        <button id="closeArticuloModal">Cancelar</button>
+        <button id="saveModalArticulo">Crear</button>
+        </div>
+    </div>
+    </div>
+
+        <!-- Modal Crear Tipo Reparación -->
+    <div id="tipoRepModal" class="modal">
+    <div class="modal-content">
+        <h4>Nuevo Tipo de Reparación</h4>
+        <label>
+        Nombre:
+        <input type="text" id="modalTipoRepNombre" required />
+        </label>
+        <label>
+        Precio:
+        <input type="number" step="0.01" id="modalTipoRepPrecio" required />
+        </label>
+        <div style="text-align:right; margin-top:1rem;">
+        <button id="closeTipoRepModal">Cancelar</button>
+        <button id="saveTipoRep">Crear</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal Crear Cliente -->
+    <div id="clienteModal" class="modal">
+    <div class="modal-content">
+        <h4>Nuevo Cliente</h4>
+        <label>
+        Nombre:
+        <input type="text" id="modalClienteNombre" required />
+        </label>
+        <label>
+        Cédula:
+        <input type="text" id="modalClienteCedula" required />
+        </label>
+        <label>
+        Teléfono:
+        <input type="text" id="modalClienteTelefono" required />
+        </label>
+        <div style="text-align:right; margin-top:1rem;">
+        <button id="closeClienteModal">Cancelar</button>
+        <button id="saveClienteModal">Crear</button>
+        </div>
+    </div>
+    </div>
+
+        <!-- Modal Crear Tipo de Letra -->
+    <div id="tipoLetraModal" class="modal">
+    <div class="modal-content">
+        <h4>Nuevo Tipo de Letra</h4>
+        <label>
+        Nombre:
+        <input type="text" id="modalTipoLetraNombre" required />
+        </label>
+        <div style="text-align:right; margin-top:1rem;">
+        <button id="closeTipoLetraModal">Cancelar</button>
+        <button id="saveTipoLetra">Crear</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal Detalle Sobre -->
+    <div id="detalleModal" class="modal">
+    <div class="modal-content" style="width:400px;">
+        <h3>Detalle del Sobre</h3>
+        <div id="detalleBody">
+        <!-- Aquí iremos inyectando los campos -->
+        </div>
+        <div style="text-align:right; margin-top:1rem;">
+        <button id="closeDetalleModal">Cerrar</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Modal Editar Sobre -->
+    <div id="editSobreModal" class="modal">
+    <div class="modal-content">
+        <h3>Editar Sobre</h3>
+        <form id="editSobreForm">
+        <input type="hidden" id="editSobreId">
+        <label>
+            Precio Total:
+            <input type="number" step="0.01" id="editPrecioTotal">
+        </label>
+        <label>
+            Estado:
+            <select id="editEstado"></select>
+        </label>
+        <label>
+            Fecha Entrega:
+            <input type="date" id="editFechaEntrega">
+        </label>
+        <!-- Añade aquí más campos si quieres permitir editarlos -->
+        <div style="text-align:right; margin-top:1rem;">
+            <button type="button" id="closeEditModal">Cancelar</button>
+            <button type="submit">Guardar Cambios</button>
+        </div>
+        </form>
+    </div>
+    </div>
+
+
+  <script>
+
+    const token = localStorage.getItem('token');
+    if (!token) location.href = '/index.html';
+
+    function parseJwt(token) {
+    try {
+      const base64 = token.split('.')[1]
+        .replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('Error parseando JWT', e);
+      return null;
+    }
+  }
+
+    function showModule(id) {
+      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-${id}`).classList.add('active');
+      document.getElementById(`module-${id}`).classList.add('active');
+    }
+    document.getElementById('btn-sobres').onclick    = () => { showModule('sobres');   loadSobres();   };
+    document.getElementById('btn-empleados').onclick  = () => { showModule('empleados'); loadUsers();   };
+    document.getElementById('btn-clientes').onclick   = () => { showModule('clientes');  /* loadClients(); */ };
+    document.getElementById('btn-articulos').onclick  = () => { showModule('articulos'); /* loadArticulos(); */ };
+    document.getElementById('btn-reportes').onclick   = () => { showModule('reportes');  /* loadReportes(); */ };
+    document.getElementById('btn-logout').onclick     = () => {
+      localStorage.removeItem('token');
+      location.href = '/index.html';
+    };
+    document.getElementById('btn-logout').onclick = () => {
+      localStorage.removeItem('token');
+      location.href = '/index.html';
+    };
+
+    // --- Utilities para cargar select ---
+    const apiBase = '/api';
+    async function loadSelect(url, selectId, valueField='id', textField) {
+    const res = await fetch(`/api/${url}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const list = await res.json();
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = '<option value=\"\">-- Seleccione una opcion --</option>';
+    list.forEach(o => {
+        const txt = textField ? o[textField] : o[valueField];
+        sel.innerHTML += `<option value="${o[valueField]}">${txt}</option>`;
+    });
+    }
+
+        // --- Modal Registrar Usuario ---
+    const userModal    = document.getElementById('userModal');
+    const btnNewUser   = document.getElementById('btn-newUser');
+    const btnCloseUser = document.getElementById('closeUserModal');
+    const btnSaveUser  = document.getElementById('saveUser');
+
+    btnNewUser.onclick = () => {
+    userModal.style.display = 'flex';
+    document.getElementById('userUsername').value = '';
+    document.getElementById('userPassword').value = '';
+    document.getElementById('userFullName').value = '';
+    document.getElementById('userRole').value     = 'employee';
+    };
+
+    btnCloseUser.onclick = () => {
+    userModal.style.display = 'none';
+    };
+
+    btnSaveUser.onclick = async () => {
+    const payload = {
+        Username:     document.getElementById('userUsername').value.trim(),
+        PasswordHash: document.getElementById('userPassword').value,        // asume que el hash se hace en el servidor
+        FullName:     document.getElementById('userFullName').value.trim(),
+        Role:         document.getElementById('userRole').value
+    };
+
+    try {
+        const res = await fetch('/api/users/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type':'application/json',
+            'Authorization':'Bearer '+localStorage.getItem('token')
+        },
+        body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        alert('Empleado creado con ID ' + data.id);
+        userModal.style.display = 'none';
+        // aquí podrías recargar la lista de empleados...
+    } catch (err) {
+        alert('Error al crear empleado: ' + err.message);
+    }
+    };
+
+
+    // --- Carga inicial de sobres ---
+    async function loadSobres() {
+        try {
+            const res   = await fetch(`${apiBase}/sobres`, {
+            headers:{ 'Authorization':'Bearer '+token }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const list  = await res.json();
+            const tbody = document.getElementById('sobresBody');
+            tbody.innerHTML = '';
+
+            list.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${s.NombreCliente}</td>
+                <td>${new Date(s.FechaIngreso).toLocaleDateString()}</td>
+                <td>${s.FechaEntrega ? new Date(s.FechaEntrega).toLocaleDateString() : ''}</td>
+                <td>${s.Estado}</td>
+                <td>${s.PrecioTotal}</td>
+                <td>
+                    <button onclick="viewSobre(${s.id})">Ver</button>
+                    <button onclick="editSobre(${s.id})">Editar</button>
+                </td>`;
+            tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error('Error cargando sobres:', err);
+            alert('No se pudieron cargar los sobres');
+        }
+    }
+
+
+        // --- Carga inicial de empleados ---
+    async function loadUsers() {
+    try {
+        const res = await fetch(`${apiBase}/users`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const list = await res.json();
+        const tbody = document.getElementById('usersBody');
+        tbody.innerHTML = '';
+        list.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${u.id}</td>
+            <td>${u.Username}</td>
+            <td>${u.fullName||''}</td>
+            <td>${u.role}</td>
+            <td>
+            <button onclick="viewUser(${u.id})">Ver</button>
+            <button onclick="editUser(${u.id})">Editar</button>
+            </td>`;
+        tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error('Error cargando usuarios:', err);
+        alert('No se pudieron cargar los empleados');
+    }
+    }
+
+
+    // --- Mostrar formulario sobre ---
+    document.getElementById('newSobreBtn').onclick = async () => {
+      document.getElementById('formTitle').textContent = 'Nuevo Sobre';
+      document.getElementById('sobreId').value = '';
+      document.getElementById('sobreForm').style.display = 'block';
+
+    const payload = parseJwt(token);
+    if (payload && payload.id) {
+      document.getElementById('inputCreatedBy').value = payload.id;
+    }
+      // cargar selects
+      await Promise.all([
+        loadSelect('ubicaciones','inputUbicacion','id','NombreTaller'),
+        loadSelect('articulos','inputArticulo','id','LogDescripcionArticulo'),
+        loadSelect('tiposReparacion','inputTipoReparacion','id','descripcion'),
+        loadSelect('estados','inputEstado','id','NombreEstado'),
+        loadSelect('clientes','inputCliente','id','NombreCliente'),
+      ]);
+    };
+    document.getElementById('cancelSobreBtn').onclick = () => {
+      document.getElementById('sobreForm').style.display = 'none';
+    };
+
+    // --- Subformularios Cliente y Artículo ---
+    document.getElementById('addClienteBtn').onclick = () =>
+      document.getElementById('clienteSubform').classList.add('active');
+    document.getElementById('cancelClienteBtn').onclick = () =>
+      document.getElementById('clienteSubform').classList.remove('active');
+    
+    // --- Modal de Crear Artículo ---
+    const modal       = document.getElementById('articuloModal');
+    const btnOpen     = document.getElementById('addArticuloBtn');
+    const btnClose    = document.getElementById('closeArticuloModal');
+    const btnSaveArt  = document.getElementById('saveModalArticulo');
+
+    // Abrir modal y cargar selects
+    btnOpen.onclick = async () => {
+    modal.style.display = 'flex';
+    await loadSelect('tiposArticulo', 'modalTipoArticulo', 'id', 'Nombre');
+    await loadSelect('material',      'modalMaterial',    'id', 'Nombre');
+    };
+
+    // Cerrar modal
+    btnClose.onclick = () => {
+    modal.style.display = 'none';
+    };
+
+    // Guardar artículo nuevo
+    btnSaveArt.onclick = async () => {
+    const payload = {
+        idTipoArticulo: Number(document.getElementById('modalTipoArticulo').value),
+        idMaterial:     Number(document.getElementById('modalMaterial').value),
+        Peso:           parseFloat(document.getElementById('modalPeso').value),
+        Cantidad:       Number(document.getElementById('modalCantidad').value),
+        LogDescripcionArticulo: document.getElementById('modalDescripcion').value
+    };
+    const res = await fetch('/api/articulos', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+        modal.style.display = 'none';
+        const newId   = data.id;  
+        const newDesc = document.getElementById('modalDescripcion').value || 'Artículo ' + newId;
+
+    // 4) rellenar el form de Sobre
+        document.getElementById('inputArticuloId').value   = newId;
+        document.getElementById('inputArticuloName').value = newDesc;
+
+    // (ya no recargamos select de artículos porque ya no existe)
+} else {
+    alert('Error creando artículo: ' + (data.error || res.status));
+  }
+};
+
+    // Referencias al modal de Tipo Reparación
+    const tipoRepModal    = document.getElementById('tipoRepModal');
+    const btnOpenTipoRep  = document.getElementById('addTipoRepBtn');
+    const btnCloseTipoRep = document.getElementById('closeTipoRepModal');
+    const btnSaveTipoRep  = document.getElementById('saveTipoRep');
+
+    // 1) Abrir modal al pulsar "+ Tipo Rep."
+    btnOpenTipoRep.onclick = () => {
+    tipoRepModal.style.display = 'flex';
+    document.getElementById('modalTipoRepNombre').value = '';
+    document.getElementById('modalTipoRepPrecio').value  = '';
+    };
+
+    // 2) Cerrar modal
+    btnCloseTipoRep.onclick = () => {
+    tipoRepModal.style.display = 'none';
+    };
+
+    // 3) Guardar nuevo Tipo de Reparación
+    btnSaveTipoRep.onclick = async () => {
+    const nombre = document.getElementById('modalTipoRepNombre').value.trim();
+    const precio = parseFloat(document.getElementById('modalTipoRepPrecio').value);
+    if (!nombre || isNaN(precio)) {
+        return alert('Debe completar nombre y precio');
+    }
+
+    const res = await fetch('/api/tiposReparacion/create', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ Nombre: nombre, Precio: precio })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+        tipoRepModal.style.display = 'none';
+        document.getElementById('inputTipoReparacionId').value   = data.id;
+        document.getElementById('inputTipoReparacionName').value = nombre;
+    } else {
+        alert('Error: ' + (data.error || res.status));
+    }
+    };
+
+
+    // Referencias al modal de Cliente
+    const clienteModal      = document.getElementById('clienteModal');
+    const btnOpenCliente    = document.getElementById('addClienteBtn');
+    const btnCloseCliente   = document.getElementById('closeClienteModal');
+    const btnSaveClienteMod = document.getElementById('saveClienteModal');
+    const selectCliente     = document.getElementById('inputCliente');
+
+
+
+    // 1) Abrir modal
+    btnOpenCliente.onclick = () => {
+    clienteModal.style.display = 'flex';
+    document.getElementById('modalClienteNombre').value  = '';
+    document.getElementById('modalClienteCedula').value  = '';
+    document.getElementById('modalClienteTelefono').value= '';
+    };
+
+    // 2) Cerrar modal
+    btnCloseCliente.onclick = () => {
+    clienteModal.style.display = 'none';
+    };
+
+    // 3) Guardar cliente nuevo
+    btnSaveClienteMod.onclick = async () => {
+    const nombre   = document.getElementById('modalClienteNombre').value.trim();
+    const cedula   = document.getElementById('modalClienteCedula').value.trim();
+    const telefono = document.getElementById('modalClienteTelefono').value.trim();
+    if (!nombre || !cedula || !telefono) {
+        return alert('Completa todos los campos');
+    }
+
+    console.log('Creando cliente:', { nombre, cedula, telefono });
+    const res = await fetch(`${apiBase}/clientes`, {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+        NombreCliente: nombre,
+        NumeroDeCedula: cedula,
+        NumeroDeTelefono: telefono
+        })
+    });
+
+    console.log('Respuesta status:', res.status);
+    const data = await res.json();
+    console.log('Respuesta JSON:', data);
+
+    if (res.ok) {
+        // cerrar modal
+        clienteModal.style.display = 'none';
+        // recargar dropdown y seleccionar el nuevo
+        await loadSelect('clientes','inputCliente','id','NombreCliente');
+        document.getElementById('inputCliente').value = data.id;
+    } else {
+        alert('Error creando cliente: ' + (data.error || res.status));
+    }
+    };
+
+    // --- Crear cliente y refrescar select ---
+    document.getElementById('saveClienteBtn').onclick = async () => {
+      const payload = {
+        NombreCliente:  document.getElementById('newClienteNombre').value,
+        NumeroDeCedula: document.getElementById('newClienteCedula').value,
+        NumeroDeTelefono: Number(document.getElementById('newClienteTelefono').value)
+      };
+      const res = await fetch(`${apiBase}/clientes`, {
+        method:'POST', headers:{ 'Content-Type':'application/json','Authorization':'Bearer '+token },
+        body:JSON.stringify(payload)
+      });
+      if (res.ok) {
+        document.getElementById('clienteSubform').classList.remove('active');
+        await loadSelect('clientes','inputCliente','id','NombreCliente');
+      } else {
+        alert('Error creando cliente');
+      }
+    };
+
+    // --- Crear artículo y refrescar select ---
+    document.getElementById('saveArticuloBtn').onclick = async () => {
+      const payload = {
+        idTipoArticulo:         Number(document.getElementById('newArticuloTipo').value),
+        idMaterial:             Number(document.getElementById('newArticuloMaterial').value),
+        Peso:                   parseFloat(document.getElementById('newArticuloPeso').value),
+        Cantidad:               Number(document.getElementById('newArticuloCantidad').value),
+        LogDescripcionArticulo: document.getElementById('newArticuloDesc').value
+      };
+      const res = await fetch(`${apiBase}/articulos`, {
+        method:'POST', headers:{ 'Content-Type':'application/json','Authorization':'Bearer '+token },
+        body:JSON.stringify(payload)
+      });
+      if (res.ok) {
+        document.getElementById('articuloSubform').classList.remove('active');
+        await loadSelect('articulos','inputArticulo','id','LogDescripcionArticulo');
+      } else {
+        alert('Error creando artículo');
+      }
+    };
+
+    // --- Modal Crear Tipo de Letra ---
+    const tipoLetraModal    = document.getElementById('tipoLetraModal');
+    const btnOpenTipoLetra  = document.getElementById('addTipoLetraBtn');
+    const btnCloseTipoLetra = document.getElementById('closeTipoLetraModal');
+    const btnSaveTipoLetra  = document.getElementById('saveTipoLetra');
+
+    // 1) Abrir modal
+    btnOpenTipoLetra.onclick = () => {
+    tipoLetraModal.style.display = 'flex';
+    document.getElementById('modalTipoLetraNombre').value = '';
+    };
+
+    // 2) Cerrar modal
+    btnCloseTipoLetra.onclick = () => {
+    tipoLetraModal.style.display = 'none';
+    };
+
+    // 3) Guardar nuevo Tipo de Letra
+    btnSaveTipoLetra.onclick = async () => {
+    const nombre = document.getElementById('modalTipoLetraNombre').value.trim();
+    if (!nombre) return alert('Por favor ingresa un nombre');
+
+    const res = await fetch('/api/tipoLetra/create', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ NombreTipoLetra: nombre })
+    });
+    const data = await res.json();
+    if (!res.ok) return alert('Error creando Tipo de Letra: ' + (data.error || res.status));
+
+    // 4) cerrar modal y volcar al formulario de Sobre
+    tipoLetraModal.style.display = 'none';
+    document.getElementById('inputTipoLetraId').value   = data.id;
+    document.getElementById('inputTipoLetraName').value = nombre;
+    };
+
+    // Referencias al modal detalle
+    const detalleModal   = document.getElementById('detalleModal');
+    const detalleBody    = document.getElementById('detalleBody');
+    const btnCloseDetalle = document.getElementById('closeDetalleModal');
+
+    // Función para ver detalle
+    window.viewSobre = async function(id) {
+    try {
+        const res = await fetch(`${apiBase}/sobres/${id}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('No se pudo cargar el sobre');
+        const s = await res.json();
+
+        // Limpiamos y rellenamos
+        detalleBody.innerHTML = `
+        <p><strong>ID:</strong> ${s.id}</p>
+        <p><strong>Ubicación:</strong> ${s.idUbicacion} (${s.NombreTaller||''})</p>
+        <p><strong>Artículo:</strong> ${s.idArticulo} (${s.LogDescripcionArticulo||''})</p>
+        <p><strong>Tipo Reparación:</strong> ${s.idTiposReparacion} (${s.descripcion||''})</p>
+        <p><strong>Estado:</strong> ${s.idEstado} (${s.NombreEstado||''})</p>
+        <p><strong>Precio Total:</strong> ${s.PrecioTotal}</p>
+        <p><strong>Fecha Ingreso:</strong> ${new Date(s.FechaIngreso).toLocaleDateString()}</p>
+        <p><strong>Fecha Entrega:</strong> ${s.FechaEntrega ? new Date(s.FechaEntrega).toLocaleDateString() : '-'}</p>
+        <p><strong>Cliente:</strong> ${s.idCliente} (${s.NombreCliente||''})</p>
+        <p><strong>Abono:</strong> ${s.Abono}</p>
+        <p><strong>Saldo Pendiente:</strong> ${s.SaldoPendiente}</p>
+        <p><strong>Tipo Letra:</strong> ${s.idTipoLetra} (${s.NombreTipoLetra||''})</p>
+        <p><strong>Grabados:</strong> ${s.DescripcionDeGrabados||''}</p>
+        <p><strong>Fecha Límite Entrega:</strong> ${s.FechaLimiteEntrega ? new Date(s.FechaLimiteEntrega).toLocaleDateString() : '-'}</p>
+        <p><strong>En Espera:</strong> ${s.EnEspera ? 'Sí' : 'No'}</p>
+        <p><strong>Creado Por (UserID):</strong> ${s.createdBy}</p>
+        `;
+
+        // Mostrar modal
+        detalleModal.style.display = 'flex';
+    } catch (err) {
+        alert(err.message);
+    }
+    };
+
+    // Cerrar modal
+    btnCloseDetalle.onclick = () => {
+    detalleModal.style.display = 'none';
+    };
+
+ // referencias al modal de edición
+    const editModal     = document.getElementById('editSobreModal');
+    const editForm      = document.getElementById('editSobreForm');
+    const btnCloseEdit  = document.getElementById('closeEditModal');
+    const selEditEstado = document.getElementById('editEstado');
+
+    // 1) Cerrar modal
+    btnCloseEdit.onclick = () => editModal.style.display = 'none';
+
+    // 2) Abrir modal y rellenar campos con GET /api/sobres/:id
+    window.editSobre = async function(id) {
+    try {
+        const res = await fetch(`${apiBase}/sobres/${id}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('No se pudo cargar el sobre');
+        const s = await res.json();
+
+        // llenamos el form
+        document.getElementById('editSobreId').value      = s.id;
+        document.getElementById('editPrecioTotal').value  = s.PrecioTotal;
+        document.getElementById('editFechaEntrega').value = s.FechaEntrega?.split('T')[0] || '';
+
+        // cargamos estados y seleccionamos el actual
+        await loadSelect('estados', 'editEstado', 'id', 'NombreEstado');
+        selEditEstado.value = s.idEstado;
+
+        // abrimos modal
+        editModal.style.display = 'flex';
+    } catch (err) {
+        alert(err.message);
+    }
+    };
+
+    // 3) Envío de formulario de edición
+    editForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const id      = Number(document.getElementById('editSobreId').value);
+    const payload = {
+        PrecioTotal:  parseFloat(document.getElementById('editPrecioTotal').value),
+        FechaEntrega: document.getElementById('editFechaEntrega').value || null,
+        idEstado:     Number(selEditEstado.value)
+    };
+
+    const res = await fetch(`${apiBase}/sobres/${id}`, {
+        method:  'PUT',
+        headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        editModal.style.display = 'none';
+        loadSobres();
+        alert('Sobre actualizado correctamente');
+    } else {
+        const err = await res.json();
+        alert('Error al actualizar: ' + err.error);
+    }
+    });
+
+
+    // --- Guardar sobre (POST o PUT) ---
+    document.getElementById('sobreForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = document.getElementById('sobreId').value;
+      const payload = {
+        idUbicacion: Number(document.getElementById('inputUbicacion').value),
+        idArticulo: Number(document.getElementById('inputArticuloId').value),
+        idTiposReparacion: Number(document.getElementById('inputTipoReparacionId').value),
+        PrecioTotal: parseFloat(document.getElementById('inputPrecioTotal').value),
+        idEstado: Number(document.getElementById('inputEstado').value),
+        FechaIngreso: document.getElementById('inputFechaIngreso').value,
+        FechaEntrega: document.getElementById('inputFechaEntrega').value || null,
+        idCliente: Number(document.getElementById('inputCliente').value),
+        Abono: parseFloat(document.getElementById('inputAbono').value) || 0,
+        SaldoPendiente: parseFloat(document.getElementById('inputSaldoPendiente').value) || 0,
+        FechaLimiteApartado: document.getElementById('inputFechaLimiteApartado').value || null,
+        idTipoLetra: Number(document.getElementById('inputTipoLetraId').value) || null,
+        DescripcionDeGrabados: document.getElementById('inputDescripcionGrabados').value || null,
+        FechaLimiteEntrega: document.getElementById('inputFechaLimiteEntrega').value || null,
+        EnEspera: document.getElementById('inputEnEspera').checked ? 1 : 0,
+        createdBy: Number(document.getElementById('inputCreatedBy').value)
+      };
+      console.log('Payload a enviar:', payload);
+
+      try {
+        const res = await fetch(`${apiBase}/sobres/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        console.log('🛰️ Respuesta raw:', res);
+
+        const data = await res.json();
+        if (res.ok) {
+          alert('Sobre creado con ID ' + data.id);
+          document.getElementById('sobreForm').style.display = 'none';
+          loadSobres();
+        } else {
+          console.error('Error del servidor:', data);
+          alert('Error al crear sobre: ' + (data.error || res.status));
+        }
+      } catch (err) {
+        console.error('Excepción en fetch:', err);
+        alert('Error en la petición: ' + err.message);
+      }
+    });
+
+    // Inicializamos
+    loadSobres();
+  </script>
+</body>
+</html>

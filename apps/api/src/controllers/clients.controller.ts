@@ -32,26 +32,22 @@ export const getClientById: RequestHandler = async (req, res, next) => {
   }
 }
 
-export const createClient: RequestHandler = async (req, res, next) => {
+export const createClient: RequestHandler = async (req, res) => {
   const { NombreCliente, NumeroDeCedula, NumeroDeTelefono } = req.body;
   try {
     const result = await pool
       .request()
-      .input('NombreCliente', NombreCliente)
-      .input('NumeroDeCedula', NumeroDeCedula)
-      .input('NumeroDeTelefono', NumeroDeTelefono)
-      .query(`
-        INSERT INTO Cliente (NombreCliente, NumeroDeCedula, NumeroDeTelefono)
-        VALUES (@NombreCliente, @NumeroDeCedula, @NumeroDeTelefono);
-        SELECT SCOPE_IDENTITY() AS id;
-      `);
-    const newId = result.recordset[0].id;
-    res.status(201).json({ id: newId, NombreCliente, NumeroDeCedula, NumeroDeTelefono });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error al crear cliente' });
+      .input('NombreCliente',     NombreCliente)
+      .input('NumeroDeCedula',    NumeroDeCedula)
+      .input('NumeroDeTelefono',  NumeroDeTelefono)
+      .execute('sp_create_cliente');
+    const newId = result.recordset[0].NewClienteId;
+    res.status(201).json({ id: newId });
+  } catch (err: any) {
+    console.error('Error SP create cliente:', err);
+    res.status(500).json({ error: err.message || 'Error al crear cliente' });
   }
-}
+};
 
 export const updateClient: RequestHandler = async (req, res, next) => {
   const id = Number(req.params.id);

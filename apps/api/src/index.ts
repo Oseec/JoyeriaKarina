@@ -6,7 +6,19 @@ import { expressjwt as jwt } from 'express-jwt';
 import { connectDB } from './db';
 import authRoutes from './routes/auth.routes';
 import clientsRoutes from './routes/clients.routes';
-import sobremRoutes from './routes/sobres.routes';
+import usersRouter from './routes/users.routes';
+import sobresRoutes from './routes/sobres.routes';
+import ubicacionesRoutes from './routes/ubicaciones.routes';
+import tipoArticuloRoutes from './routes/tipoArticulo.routes';
+import materialRoutes     from './routes/material.routes';
+import articulosRoutes from './routes/articulos.routes';
+import estadoRoutes          from './routes/estado.routes';
+import tipoReparacionRoutes from './routes/tipoReparacion.routes';
+import tipoLetraRoutes from './routes/tipoLetra.routes';
+
+
+
+
 // …otras rutas
 
 const app = express();
@@ -37,9 +49,26 @@ app.use(
 );
 
 // Rutas protegidas
-app.use('/api/clients', clientsRoutes);
+app.use('/api/clientes', clientsRoutes);
 // …otras rutas CRUD
-app.use('/api/sobres', sobremRoutes);
+app.use('/api/sobres', sobresRoutes);
+
+app.use('/api/ubicaciones', ubicacionesRoutes);
+
+app.use('/api/tiposArticulo', tipoArticuloRoutes);
+
+app.use('/api/material', materialRoutes);
+
+app.use('/api/articulos', articulosRoutes);
+
+app.use('/api/estados',  estadoRoutes);
+
+app.use('/api/tiposReparacion',  tipoReparacionRoutes);
+
+app.use('/api/tipoLetra', tipoLetraRoutes);
+
+app.use('/api/users', usersRouter);
+
 
 // Error handler
 app.use((err: any, _req: any, res: any, _next: any) => {
